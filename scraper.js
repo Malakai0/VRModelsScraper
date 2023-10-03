@@ -2,7 +2,6 @@ const https = require("https");
 const events = require("events");
 const fs = require("fs");
 const cheerio = require("cheerio");
-const { parse } = require("path");
 
 require("dotenv").config();
 
@@ -74,11 +73,15 @@ const checkIndex = (url) => {
   return index[0];
 };
 
-const get = async (pageNumber) => {
+const get = async (pageNumber, retries) => {
   let url = `https://vrmodels.store/avatars/page/${pageNumber}/`;
 
   if (pageNumber == 1) {
     url = pageOne;
+  }
+
+  if (!retries) {
+    retries = 0;
   }
 
   return new Promise((resolve, reject) => {
@@ -93,12 +96,22 @@ const get = async (pageNumber) => {
         });
       })
       .on("error", (err) => {
-        reject(err);
+        if (retries < 3) {
+          setTimeout(() => {
+            resolve(get(pageNumber, retries + 1));
+          }, 1000);
+        } else {
+          reject(err);
+        }
       });
   });
 };
 
-const getAvatar = async (name, url) => {
+const getAvatar = async (name, url, retries) => {
+  if (!retries) {
+    retries = 0;
+  }
+
   return new Promise((resolve, reject) => {
     const options = {
       hostname: "vrmodels.store",
@@ -121,7 +134,13 @@ const getAvatar = async (name, url) => {
     });
 
     req.on("error", (error) => {
-      reject(error);
+      if (retries < 3) {
+        setTimeout(() => {
+          resolve(getAvatar(name, url, retries + 1));
+        }, 1000);
+      } else {
+        reject(error);
+      }
     });
 
     req.end();
@@ -163,7 +182,12 @@ const findPageForAviIndex = async (avatarIndex, maxPage) => {
 };
 
 const catchUp = async (maxPage) => {
-  const lastPage = await findPageForAviIndex(lastAvatarLogged, maxPage);
+  let lastPage = 1;
+  if (process.env.START_AT) {
+    lastPage = parseInt(process.env.START_AT);
+  } else {
+    lastPage = await findPageForAviIndex(lastAvatarLogged, maxPage);
+  }
 
   if (!lastPage) {
     throw new Error("Avatar index not found");
