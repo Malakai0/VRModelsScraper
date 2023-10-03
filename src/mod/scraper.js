@@ -6,8 +6,12 @@ const cheerio = require("cheerio");
 require("dotenv").config();
 
 const pageOne = "https://vrmodels.store/avatars/";
+const statePath = "db/state.json";
 
-let lastAvatarLogged = 0;
+let state = {
+  lastAvatarLogged: 0,
+  lastPage: 0,
+};
 
 const logEvent = new events.EventEmitter();
 
@@ -47,8 +51,8 @@ const scrapeAvatar = (body, name, url) => {
   const datetime = $(".date").attr("datetime");
   const tags = $(".tags_list a")
     .map((i, el) => $(el).text())
-    .get();
-  let tagsString = tags.join(", ");
+    .get()
+    .join(", ");
 
   const avatar = {
     name: name,
@@ -62,7 +66,7 @@ const scrapeAvatar = (body, name, url) => {
     views: parseInt(viewCount.replace(/\s/g, "")),
     likes: parseInt(likeCount.replace(/\s/g, "")),
     date: datetime,
-    tags: tagsString,
+    tags: tags,
   };
 
   return avatar;
@@ -147,23 +151,29 @@ const getAvatar = async (name, url, retries) => {
   });
 };
 
-const readFromLastAvatar = () => {
-  lastAvatarLogged = fs.readFileSync("./lastAvatar", "utf8");
+const writeToState = () => {
+  fs.writeFileSync(statePath, JSON.stringify(state, null, 2));
 };
 
-const writeToLastAvatar = () => {
-  fs.writeFileSync("./lastAvatar", lastAvatarLogged);
+const readState = () => {
+  if (fs.existsSync(statePath)) {
+    const loadedState = JSON.parse(fs.readFileSync(statePath, "utf8"));
+    state = loadedState;
+  } else {
+    writeToState();
+  }
 };
 
 const log = (avatar) => {
   logEvent.emit("avatar", avatar);
 };
 
+// We don't need this function anymore but i'll keep it here for now
 const findPageForAviIndex = async (avatarIndex, maxPage) => {
   let page = 1;
   let avatars = await get(page);
 
-  while (avatars[1]) {
+  while (avatars[0]) {
     for (const entry of avatars) {
       if (checkIndex(entry.url) == avatarIndex) {
         return page;
@@ -181,23 +191,23 @@ const findPageForAviIndex = async (avatarIndex, maxPage) => {
   return null;
 };
 
-const catchUp = async (maxPage) => {
-  let lastPage = 1;
-  if (process.env.START_AT) {
-    lastPage = parseInt(process.env.START_AT);
-  } else {
-    lastPage = await findPageForAviIndex(lastAvatarLogged, maxPage);
+const catchUp = async () => {
+  if (state.lastPage == 0 || state.lastAvatarLogged == 0) {
+    let avatars = await get(1);
+    const index = checkIndex(avatars[0].url);
+    state.lastAvatarLogged = index;
+    state.lastPage = 1;
+    writeToState();
+    return;
   }
 
-  if (!lastPage) {
-    throw new Error("Avatar index not found");
-  }
+  let lastPage = state.lastPage;
 
   if (lastPage == 1) {
     const avatars = await get(1);
     const index = checkIndex(avatars[0].url);
 
-    if (index == lastAvatarLogged) {
+    if (index == state.lastAvatarLogged) {
       console.log("Already up to date"); // save some requests
       return;
     }
@@ -217,9 +227,10 @@ const catchUp = async (maxPage) => {
 
       if (reachedIndex) {
         log(await getAvatar(entry.name, entry.url));
-        lastAvatarLogged = index;
-        writeToLastAvatar();
-      } else if (index == lastAvatarLogged) {
+        state.lastAvatarLogged = index;
+        state.lastPage = pageNumber;
+        writeToState();
+      } else if (index == state.lastAvatarLogged) {
         reachedIndex = true;
       }
     }
@@ -227,14 +238,7 @@ const catchUp = async (maxPage) => {
 };
 
 module.exports = {
-  get,
-  getAvatar,
-  readFromLastAvatar,
-  writeToLastAvatar,
+  readState,
   catchUp,
-  findPageForAviIndex,
-  checkIndex,
-  scrapeAvatarPage,
-  log,
   logEvent,
 };

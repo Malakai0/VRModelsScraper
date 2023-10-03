@@ -1,6 +1,6 @@
 const sqlite3 = require("sqlite3").verbose();
 
-let db = new sqlite3.Database("./db/avatars.db", (err) => {
+let db = new sqlite3.Database("db/sql/avatars.db", (err) => {
   if (err) {
     console.error(err.message);
   }
@@ -28,9 +28,7 @@ const insertAvatar = (avatar) => {
     if (err) {
       return console.error(err.message);
     }
-    if (row) {
-      console.log("Avatar already exists in database");
-    } else {
+    if (!row) {
       db.run(
         `INSERT INTO Avatars(
                 Name,
@@ -67,6 +65,8 @@ const insertAvatar = (avatar) => {
           console.log(`A row has been inserted with rowid ${this.lastID}`);
         }
       );
+    } else {
+      console.log(`Avatar ${avatar.name} already exists in the database.`);
     }
   });
 };

@@ -1,11 +1,11 @@
-const scraper = require("./scraper");
-const db = require("./database");
+const scraper = require("./mod/scraper");
+const db = require("./mod/database");
 
 scraper.logEvent.on("avatar", (avatar) => {
   db.insertAvatar(avatar);
 });
 
-scraper.readFromLastAvatar();
+scraper.readState();
 (async () => {
   await scraper.catchUp();
   while (true) {
