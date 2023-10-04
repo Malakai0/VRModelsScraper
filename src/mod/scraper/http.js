@@ -25,6 +25,19 @@ const httpCall = async (url, retries) => {
 
   return new Promise((resolve, reject) => {
     const req = https.request(options, (res) => {
+      // if we get a 503, retry
+      if (res.statusCode == 503) {
+        if (retries < MAX_RETRIES) {
+          setTimeout(() => {
+            resolve(httpCall(url, retries + 1));
+          }, exponentialBackoff(retries));
+        } else {
+          reject("Max retries exceeded");
+        }
+
+        return;
+      }
+
       let data = "";
       res.on("data", (chunk) => {
         data += chunk;

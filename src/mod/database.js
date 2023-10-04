@@ -63,6 +63,7 @@ const insertAvatar = (avatar) => {
         ],
         function (err) {
           if (err) {
+            console.log(avatar);
             return console.log(err.message);
           }
           console.log(`A row has been inserted with rowid ${this.lastID}`);

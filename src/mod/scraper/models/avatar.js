@@ -10,7 +10,7 @@ const scrapeElement = ($, replace) => {
     .last()
     .parent()
     .text()
-    .replace(replace + ":", "")
+    .replace(`${replace}:`, "")
     .trim();
 };
 
@@ -50,6 +50,8 @@ class AvatarBixby extends Bixby {
       likes: parseInt(likeCount.replace(/\s/g, "")),
       date: datetime,
       tags: tags,
+
+      body: itemBody,
     };
 
     return avatar;

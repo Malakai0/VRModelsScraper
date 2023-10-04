@@ -136,10 +136,14 @@ class Bixby {
         const index = this.getIndexOfItem(entry.url);
 
         if (reachedIndex) {
-          this.logEvent.emit(
-            "item",
-            await this.getItemInformation(entry.name, entry.url)
-          );
+          this.getItemInformation(entry.name, entry.url)
+            .then((item) => {
+              this.logEvent.emit("item", item);
+            })
+            .catch((err) => {
+              console.log(err);
+            });
+
           this.state.lastAvatarLogged = index;
           this.state.lastPage = pageNumber;
           this.state.write();
