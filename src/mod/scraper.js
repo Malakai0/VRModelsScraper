@@ -168,9 +168,8 @@ const log = (avatar) => {
   logEvent.emit("avatar", avatar);
 };
 
-// We don't need this function anymore but i'll keep it here for now
-const findPageForAviIndex = async (avatarIndex, maxPage) => {
-  let page = 1;
+const findPageForAviIndex = async (avatarIndex, startingPage) => {
+  let page = startingPage;
   let avatars = await get(page);
 
   while (avatars[0]) {
@@ -202,6 +201,18 @@ const catchUp = async () => {
   }
 
   let lastPage = state.lastPage;
+
+  let onLastPage = false;
+  for (const entry of await get(lastPage)) {
+    if (checkIndex(entry.url) == state.lastAvatarLogged) {
+      onLastPage = true;
+      break;
+    }
+  }
+
+  if (!onLastPage) {
+    lastPage = await findPageForAviIndex(state.lastAvatarLogged, lastPage);
+  }
 
   if (lastPage == 1) {
     const avatars = await get(1);
