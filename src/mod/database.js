@@ -10,6 +10,7 @@ let db = new sqlite3.Database("db/sql/avatars.db", (err) => {
 db.run(`CREATE TABLE IF NOT EXISTS Avatars(
     Id INTEGER PRIMARY KEY AUTOINCREMENT,
     Name TEXT NOT NULL,
+    CreatedBy TEXT NOT NULL,
     Url TEXT NOT NULL,
     Likes INTEGER NOT NULL,
     Views INTEGER NOT NULL,
@@ -32,6 +33,7 @@ const insertAvatar = (avatar) => {
       db.run(
         `INSERT INTO Avatars(
                 Name,
+                CreatedBy,
                 Url,
                 Likes,
                 Views,
@@ -43,9 +45,10 @@ const insertAvatar = (avatar) => {
                 NSFW,
                 DPS,
                 Tags
-            ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)`,
+            ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)`,
         [
           avatar.name,
+          avatar.createdBy,
           avatar.url,
           avatar.likes,
           avatar.views,

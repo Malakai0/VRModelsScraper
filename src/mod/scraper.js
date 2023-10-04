@@ -41,6 +41,7 @@ const scrapeElement = ($, replace) => {
 const scrapeAvatar = (body, name, url) => {
   const $ = cheerio.load(body);
   const sdk = scrapeElement($, "SDK");
+  const createdBy = scrapeElement($, "Сreated by");
   const platform = scrapeElement($, "Platform");
   const physbones = scrapeElement($, "Рhysbones");
   const fullBody = scrapeElement($, "Full body");
@@ -56,6 +57,7 @@ const scrapeAvatar = (body, name, url) => {
 
   const avatar = {
     name: name,
+    createdBy: createdBy,
     url: url,
     sdk: sdk,
     platform: platform,
