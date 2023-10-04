@@ -1,0 +1,51 @@
+const https = require("https");
+
+require("dotenv").config();
+
+const MAX_RETRIES = 3;
+
+const exponentialBackoff = (retries) => {
+  return Math.pow(2, retries) * 1000 + Math.random() * 1000;
+};
+
+const httpCall = async (url, retries) => {
+  if (!retries) {
+    retries = 0;
+  }
+
+  const options = {
+    hostname: "vrmodels.store",
+    port: 443,
+    path: url,
+    method: "GET",
+    headers: {
+      Cookie: `dle_user_id=${process.env.USER_ID}; dle_password=${process.env.USER_PASS}; dle_newpm=0`,
+    },
+  };
+
+  return new Promise((resolve, reject) => {
+    const req = https.request(options, (res) => {
+      let data = "";
+      res.on("data", (chunk) => {
+        data += chunk;
+      });
+      res.on("end", () => {
+        resolve(data);
+      });
+    });
+
+    req.on("error", (error) => {
+      if (retries < MAX_RETRIES) {
+        setTimeout(() => {
+          resolve(httpCall(url, retries + 1));
+        }, exponentialBackoff(retries));
+      } else {
+        reject(error);
+      }
+    });
+
+    req.end();
+  });
+};
+
+module.exports = httpCall;

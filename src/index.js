@@ -1,15 +1,16 @@
-const scraper = require("./mod/scraper");
 const db = require("./mod/database");
+const AvatarBixby = require("./mod/scraper/models/avatar");
 
-scraper.logEvent.on("avatar", (avatar) => {
+const avatarScraper = new AvatarBixby("db/state.json");
+
+avatarScraper.logEvent.on("item", (avatar) => {
   db.insertAvatar(avatar);
 });
 
-scraper.readState();
 (async () => {
-  await scraper.catchUp();
+  await avatarScraper.catchUp();
   while (true) {
     await new Promise((r) => setTimeout(r, 60000));
-    await scraper.catchUp();
+    await avatarScraper.catchUp();
   }
 })();
