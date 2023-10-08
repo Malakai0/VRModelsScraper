@@ -3,7 +3,7 @@ const fs = require("fs");
 class SegmentState {
   constructor(path) {
     this.path = path;
-    this.lastAvatarLogged = 0;
+    this.lastItemLogged = "0";
     this.lastPage = 0;
   }
 
@@ -11,7 +11,7 @@ class SegmentState {
     if (fs.existsSync(this.path)) {
       const loadedState = JSON.parse(fs.readFileSync(this.path, "utf8"));
 
-      this.lastAvatarLogged = loadedState.lastAvatarLogged;
+      this.lastItemLogged = loadedState.lastItemLogged;
       this.lastPage = loadedState.lastPage;
     } else {
       this.write();
@@ -25,7 +25,7 @@ class SegmentState {
   serialize() {
     return JSON.stringify(
       {
-        lastAvatarLogged: this.lastAvatarLogged,
+        lastItemLogged: this.lastItemLogged,
         lastPage: this.lastPage,
       },
       null,

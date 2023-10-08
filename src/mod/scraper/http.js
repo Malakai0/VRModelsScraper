@@ -2,13 +2,13 @@ const https = require("https");
 
 require("dotenv").config();
 
-const MAX_RETRIES = 3;
+const MAX_RETRIES = 5;
 
 const exponentialBackoff = (retries) => {
   return Math.pow(2, retries) * 1000 + Math.random() * 1000;
 };
 
-const httpCall = async (url, retries) => {
+const httpCall = async (url, encoding, retries) => {
   if (!retries) {
     retries = 0;
   }
@@ -25,11 +25,16 @@ const httpCall = async (url, retries) => {
 
   return new Promise((resolve, reject) => {
     const req = https.request(options, (res) => {
-      // if we get a 503, retry
-      if (res.statusCode == 503) {
+      // if we get rate limited, retry
+      if (
+        res.statusCode == 503 ||
+        res.statusCode == 504 ||
+        res.statusCode == 502 ||
+        res.statusCode == 429
+      ) {
         if (retries < MAX_RETRIES) {
           setTimeout(() => {
-            resolve(httpCall(url, retries + 1));
+            resolve(httpCall(url, encoding, retries + 1));
           }, exponentialBackoff(retries));
         } else {
           reject("Max retries exceeded");
@@ -39,9 +44,15 @@ const httpCall = async (url, retries) => {
       }
 
       let data = "";
+
+      if (encoding) {
+        res.setEncoding(encoding);
+      }
+
       res.on("data", (chunk) => {
         data += chunk;
       });
+
       res.on("end", () => {
         resolve(data);
       });
@@ -50,7 +61,7 @@ const httpCall = async (url, retries) => {
     req.on("error", (error) => {
       if (retries < MAX_RETRIES) {
         setTimeout(() => {
-          resolve(httpCall(url, retries + 1));
+          resolve(httpCall(url, encoding, retries + 1));
         }, exponentialBackoff(retries));
       } else {
         reject(error);

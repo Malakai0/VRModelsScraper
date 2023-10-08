@@ -1,9 +1,9 @@
-// Avatar-Specicalized Bixby
+// World-Specicalized Bixby
 
 const Bixby = require("../bixby");
 const cheerio = require("cheerio");
 
-const pageOne = "https://vrmodels.store/avatars/";
+const pageOne = "https://vrmodels.store/models/worlds/";
 
 const scrapeElement = ($, replace) => {
   return $(`span:contains("${replace}:")`)
@@ -14,20 +14,14 @@ const scrapeElement = ($, replace) => {
     .trim();
 };
 
-class AvatarBixby extends Bixby {
+class WorldBixby extends Bixby {
   constructor(statePath) {
     super(statePath);
   }
 
   scrapeItem(itemBody, itemName, itemURL) {
     const $ = cheerio.load(itemBody);
-    const sdk = scrapeElement($, "SDK") || "Unknown";
     const createdBy = scrapeElement($, "Сreated by") || "Unknown";
-    const platform = scrapeElement($, "Platform") || "Unknown";
-    const physbones = scrapeElement($, "Рhysbones");
-    const fullBody = scrapeElement($, "Full body");
-    const nsfw = scrapeElement($, "Nsfw");
-    const dps = scrapeElement($, "DPS");
     const viewCount = scrapeElement($, "Views") || "0";
     const likeCount = $(`.rate_like .ratingtypeplus`).text().trim() || "0";
     const datetime = $(".date").attr("datetime");
@@ -42,12 +36,6 @@ class AvatarBixby extends Bixby {
       createdBy: createdBy,
       url: itemURL,
       downloadLink: downloadLink,
-      sdk: sdk,
-      platform: platform,
-      physbones: physbones == "Yes" ? true : false,
-      fullbody: fullBody == "Yes" ? true : false,
-      nsfw: nsfw == "Yes" ? true : false,
-      dps: dps == "Yes" ? true : false,
       views: parseInt(viewCount.replace(/\s/g, "")),
       likes: parseInt(likeCount.replace(/\s/g, "")),
       date: datetime,
@@ -61,8 +49,8 @@ class AvatarBixby extends Bixby {
     if (pageNumber == 1) {
       return pageOne;
     }
-    return `https://vrmodels.store/avatars/page/${pageNumber}/`;
+    return `https://vrmodels.store/models/worlds/page/${pageNumber}/`;
   }
 }
 
-module.exports = AvatarBixby;
+module.exports = WorldBixby;

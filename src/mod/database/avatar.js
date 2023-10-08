@@ -12,6 +12,7 @@ db.run(`CREATE TABLE IF NOT EXISTS Avatars(
     Name TEXT NOT NULL,
     CreatedBy TEXT NOT NULL,
     Url TEXT NOT NULL,
+    Download TEXT NOT NULL,
     Likes INTEGER NOT NULL,
     Views INTEGER NOT NULL,
     Date DATE NOT NULL,
@@ -24,7 +25,7 @@ db.run(`CREATE TABLE IF NOT EXISTS Avatars(
     Tags TEXT NOT NULL
 )`);
 
-const insertAvatar = (avatar) => {
+const insert = (avatar) => {
   db.get(`SELECT * FROM Avatars WHERE Url = ?`, [avatar.url], (err, row) => {
     if (err) {
       return console.error(err.message);
@@ -35,6 +36,7 @@ const insertAvatar = (avatar) => {
                 Name,
                 CreatedBy,
                 Url,
+                Download,
                 Likes,
                 Views,
                 Date,
@@ -45,11 +47,12 @@ const insertAvatar = (avatar) => {
                 NSFW,
                 DPS,
                 Tags
-            ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+            ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
         [
           avatar.name,
           avatar.createdBy,
           avatar.url,
+          avatar.downloadLink,
           avatar.likes,
           avatar.views,
           avatar.date,
@@ -66,7 +69,7 @@ const insertAvatar = (avatar) => {
             console.log(avatar);
             return console.log(err.message);
           }
-          console.log(`A row has been inserted with rowid ${this.lastID}`);
+          console.log(`Avatar ${avatar.name} inserted into the database.`);
         }
       );
     } else {
@@ -75,19 +78,4 @@ const insertAvatar = (avatar) => {
   });
 };
 
-const query = (sql, params) => {
-  return new Promise((resolve, reject) => {
-    db.all(sql, params, (err, rows) => {
-      if (err) {
-        console.log("Error running sql: " + sql);
-        console.log(err);
-        reject(err);
-      } else {
-        resolve(rows);
-      }
-    });
-  });
-};
-
-exports.insertAvatar = insertAvatar;
-exports.query = query;
+exports.insert = insert;
