@@ -1,7 +1,7 @@
 // Script-Specicalized Bixby
 
-const Bixby = require("../bixby");
-const cheerio = require("cheerio");
+import Bixby from "../bixby.js";
+import cheerio from "cheerio";
 
 const pageOne = "https://vrmodels.store/other/scripts/";
 
@@ -53,4 +53,4 @@ class ScriptBixby extends Bixby {
   }
 }
 
-module.exports = ScriptBixby;
+export default ScriptBixby;

@@ -1,7 +1,7 @@
-// Accessory-Specicalized Bixby
+// Animation-Specicalized Bixby
 
-const Bixby = require("../bixby");
-const cheerio = require("cheerio");
+import Bixby from "../bixby.js";
+import cheerio from "cheerio";
 
 const pageOne = "https://vrmodels.store/other/animations/";
 
@@ -14,7 +14,7 @@ const scrapeElement = ($, replace) => {
     .trim();
 };
 
-class AccessoryBixby extends Bixby {
+class AnimationBixby extends Bixby {
   constructor(statePath) {
     super(statePath);
   }
@@ -53,4 +53,4 @@ class AccessoryBixby extends Bixby {
   }
 }
 
-module.exports = AccessoryBixby;
+export default AnimationBixby;

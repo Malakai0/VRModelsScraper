@@ -1,7 +1,7 @@
 // Accessory-Specicalized Bixby
 
-const Bixby = require("../bixby");
-const cheerio = require("cheerio");
+import Bixby from "../bixby.js";
+import cheerio from "cheerio";
 
 const pageOne = "https://vrmodels.store/accessories/";
 
@@ -53,4 +53,4 @@ class AccessoryBixby extends Bixby {
   }
 }
 
-module.exports = AccessoryBixby;
+export default AccessoryBixby;

@@ -1,8 +1,9 @@
-const https = require("https");
+import https from "https";
+import dotenv from "dotenv";
 
-require("dotenv").config();
+dotenv.config();
 
-const MAX_RETRIES = 5;
+const MAX_RETRIES = 8;
 
 const exponentialBackoff = (retries) => {
   return Math.pow(2, retries) * 1000 + Math.random() * 1000;
@@ -72,4 +73,4 @@ const httpCall = async (url, encoding, retries) => {
   });
 };
 
-module.exports = httpCall;
+export default httpCall;

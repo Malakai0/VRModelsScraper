@@ -1,4 +1,4 @@
-const fs = require("fs");
+import fs from "fs";
 
 class SegmentState {
   constructor(path) {
@@ -34,4 +34,4 @@ class SegmentState {
   }
 }
 
-module.exports = SegmentState;
+export default SegmentState;

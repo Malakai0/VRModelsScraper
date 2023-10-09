@@ -1,9 +1,9 @@
-const state = require("./state.js");
-const httpCall = require("./http.js");
+import SegmentState from "./state.js";
+import httpCall from "./http.js";
 
-const cheerio = require("cheerio");
-const events = require("events");
-const fs = require("fs");
+import cheerio from "cheerio";
+import events from "events";
+import fs from "fs";
 
 // Bixby is responsible for scraping a segment of a catalog on VRModels.
 // Originally it was also only designed for the Avatar catalog, but it's
@@ -12,7 +12,7 @@ class Bixby {
   constructor(statePath) {
     this.statePath = statePath;
     this.logEvent = new events.EventEmitter();
-    this.state = new state(statePath);
+    this.state = new SegmentState(statePath);
 
     this.state.load();
   }
@@ -62,6 +62,7 @@ class Bixby {
       httpCall(itemURL)
         .then((body) => {
           const item = this.scrapeItem(body, itemName, itemURL);
+          item.itemId = this.getIndexOfItem(itemURL);
           resolve(item);
         })
         .catch((err) => {
@@ -140,7 +141,7 @@ class Bixby {
 
   async downloadImage(id, url) {
     return new Promise((resolve, reject) => {
-      const path = `db/thumbnails/${id}.jpg`;
+      const path = `src/mod/server/public/thumbnails/${id}.jpg`;
 
       if (fs.existsSync(path)) {
         resolve();
@@ -156,6 +157,16 @@ class Bixby {
           reject(err);
         });
     });
+  }
+
+  update(itemName, itemURL) {
+    this.getItemInformation(itemName, itemURL)
+      .then((item) => {
+        this.logEvent.emit("itemUpdate", item);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   }
 
   async catchUp() {
@@ -233,4 +244,4 @@ class Bixby {
   }
 }
 
-module.exports = Bixby;
+export default Bixby;

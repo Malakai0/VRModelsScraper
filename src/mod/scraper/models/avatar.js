@@ -1,7 +1,7 @@
 // Avatar-Specicalized Bixby
 
-const Bixby = require("../bixby");
-const cheerio = require("cheerio");
+import Bixby from "../bixby.js";
+import cheerio from "cheerio";
 
 const pageOne = "https://vrmodels.store/avatars/";
 
@@ -65,4 +65,4 @@ class AvatarBixby extends Bixby {
   }
 }
 
-module.exports = AvatarBixby;
+export default AvatarBixby;

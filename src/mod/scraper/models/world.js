@@ -1,7 +1,7 @@
 // World-Specicalized Bixby
 
-const Bixby = require("../bixby");
-const cheerio = require("cheerio");
+import Bixby from "../bixby.js";
+import cheerio from "cheerio";
 
 const pageOne = "https://vrmodels.store/models/worlds/";
 
@@ -53,4 +53,4 @@ class WorldBixby extends Bixby {
   }
 }
 
-module.exports = WorldBixby;
+export default WorldBixby;
