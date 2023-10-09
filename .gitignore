@@ -3,6 +3,7 @@ package-lock.json
 .env
 
 db/sql/*.db
+db/sql/*.db-journal
 db/state/*.json
 
 src/mod/api/public/thumbnails/*.jpg
