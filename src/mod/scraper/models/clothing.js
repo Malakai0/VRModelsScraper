@@ -29,6 +29,7 @@ class ClothingBixby extends Bixby {
     const tags = $(".tags_list a")
       .map((i, el) => $(el).text())
       .get()
+      .sort()
       .join(", ");
 
     const avatar = {
