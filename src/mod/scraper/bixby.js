@@ -141,7 +141,7 @@ class Bixby {
 
   async downloadImage(id, url) {
     return new Promise((resolve, reject) => {
-      const path = `src/mod/server/public/thumbnails/${id}.jpg`;
+      const path = `src/mod/api/public/thumbnails/${id}.jpg`;
 
       if (fs.existsSync(path)) {
         resolve();
