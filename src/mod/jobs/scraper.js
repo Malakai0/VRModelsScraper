@@ -40,12 +40,26 @@ const startScraper = (scraper) => {
   });
 };
 
+const recursiveUpdate = async (scraper, databaseKey, items, index) => {
+  if (index >= items.length) {
+    return;
+  }
+
+  const promises = [];
+  for (let i = index; i < index + 50 && i < items.length; i++) {
+    promises.push(scraper.update(items[i].Name, items[i].Url));
+  }
+
+  await Promise.all(promises);
+  return await recursiveUpdate(scraper, databaseKey, items, index + 50);
+};
+
 const updateScraper = (scraper, databaseKey) => {
   return new Promise(async () => {
-    alexa.getTableItems(databaseKey).then((items) => {
-      for (const item of items) {
-        scraper.update(item.Name, item.Url);
-      }
+    alexa.getTableItems(databaseKey).then(async (items) => {
+      await recursiveUpdate(scraper, databaseKey, items, 0);
+
+      console.log("Done updating " + databaseKey);
     });
   });
 };

@@ -160,13 +160,17 @@ class Bixby {
   }
 
   update(itemName, itemURL) {
-    this.getItemInformation(itemName, itemURL)
-      .then((item) => {
-        this.logEvent.emit("itemUpdate", item);
-      })
-      .catch((err) => {
-        console.log(err);
-      });
+    return new Promise((resolve, reject) => {
+      this.getItemInformation(itemName, itemURL)
+        .then((item) => {
+          this.logEvent.emit("itemUpdate", item);
+          resolve();
+        })
+        .catch((err) => {
+          console.log(err);
+          reject(err);
+        });
+    });
   }
 
   async catchUp() {
