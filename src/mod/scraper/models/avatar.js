@@ -3,16 +3,10 @@
 import Bixby from "../bixby.js";
 import cheerio from "cheerio";
 
-const pageOne = "https://vrmodels.store/avatars/";
+import scrapeElement from "../util/scrapeElement.js";
+import downloadGrabber from "../util/downloadGrabber.js";
 
-const scrapeElement = ($, replace) => {
-  return $(`span:contains("${replace}:")`)
-    .last()
-    .parent()
-    .text()
-    .replace(`${replace}:`, "")
-    .trim();
-};
+const pageOne = "https://vrmodels.store/avatars/";
 
 class AvatarBixby extends Bixby {
   constructor(statePath) {
@@ -31,7 +25,6 @@ class AvatarBixby extends Bixby {
     const viewCount = scrapeElement($, "Views") || "0";
     const likeCount = $(`.rate_like .ratingtypeplus`).text().trim() || "0";
     const datetime = $(".date").attr("datetime");
-    const downloadLink = $(".btnDownload").attr("href");
     const tags = $(".tags_list a")
       .map((i, el) => $(el).text())
       .get()
@@ -42,7 +35,7 @@ class AvatarBixby extends Bixby {
       name: itemName,
       createdBy: createdBy,
       url: itemURL,
-      downloadLink: downloadLink,
+      downloadLinks: downloadGrabber($),
       sdk: sdk,
       platform: platform,
       physbones: physbones == "Yes" ? true : false,

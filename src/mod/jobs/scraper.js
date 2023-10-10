@@ -9,6 +9,8 @@ import ScriptBixby from "../scraper/models/script.js";
 import ShaderBixby from "../scraper/models/shader.js";
 import WorldBixby from "../scraper/models/world.js";
 
+import log from "../util/log.js";
+
 const Pairs = [
   ["accessories", new AccessoryBixby("db/state/accessory.json")],
   ["animations", new AnimationBixby("db/state/animation.json")],
@@ -21,12 +23,21 @@ const Pairs = [
   ["worlds", new WorldBixby("db/state/world.json")],
 ];
 
+const twirly = ["|", "/", "-", "\\"];
+
 const initScraper = (scraper, databaseKey) => {
   scraper.logEvent.on("item", (item) => {
     alexa.insert(databaseKey, item);
   });
 
-  scraper.logEvent.on("itemUpdate", (item) => {
+  scraper.logEvent.on("itemUpdate", async (item) => {
+    const currentItem = await alexa.getItemFromId(databaseKey, item.itemId);
+
+    if (item.downloadLinks == "") {
+      // If the item has no download links (DMCA, been deleted, etc.), don't update the download links (so we still have access to the old ones :3)
+      item.downloadLinks = currentItem.downloadLinks;
+    }
+
     alexa.update(databaseKey, item);
   });
 };
@@ -40,28 +51,68 @@ const startScraper = (scraper) => {
   });
 };
 
-const recursiveUpdate = async (scraper, databaseKey, items, index) => {
-  if (index >= items.length) {
-    return;
-  }
+const updateScraper = (scraper, databaseKey) => {
+  scraper.totalItems = "?";
+  scraper.itemsScraped = 0;
+  scraper.itemsAdded = 0;
+
+  return new Promise(async () => {
+    const items = await alexa.getTableItems(databaseKey);
+
+    scraper.totalItems = items.length;
+
+    for (let i = 0; i < items.length; i += 50) {
+      const promises = [];
+      for (let j = i; j < i + 50 && j < items.length; j++) {
+        const promise = scraper.update(items[j].Name, items[j].Url);
+        promise.then(() => {
+          scraper.itemsScraped++;
+        });
+        promises.push(promise);
+      }
+      await Promise.all(promises);
+    }
+
+    scraper.itemsAdded = await scraper.catchUp();
+  });
+};
+
+const updateScrapers = async () => {
+  let twirlyIndex = 0;
+  let errors = [];
+
+  log.event.on("error", (err) => {
+    errors.push(err);
+  });
+
+  setInterval(() => {
+    let text = "";
+    for (const [databaseKey, scraper] of Pairs) {
+      let twirlyBoy = twirly[twirlyIndex];
+
+      if (scraper.itemsScraped >= scraper.totalItems) {
+        twirlyBoy = "!";
+      }
+
+      text += `${databaseKey} ${scraper.itemsScraped} / ${scraper.totalItems} (${scraper.itemsAdded} added) [${twirlyBoy}]\n`;
+    }
+
+    for (const error of errors) {
+      text += error + "\n";
+    }
+
+    console.clear();
+    process.stdout.write(text);
+    twirlyIndex = (twirlyIndex + 1) % twirly.length;
+  }, 250);
 
   const promises = [];
-  for (let i = index; i < index + 50 && i < items.length; i++) {
-    promises.push(scraper.update(items[i].Name, items[i].Url));
+  for (const [databaseKey, scraper] of Pairs) {
+    promises.push(updateScraper(scraper, databaseKey));
   }
 
   await Promise.all(promises);
-  return await recursiveUpdate(scraper, databaseKey, items, index + 50);
-};
-
-const updateScraper = (scraper, databaseKey) => {
-  return new Promise(async () => {
-    alexa.getTableItems(databaseKey).then(async (items) => {
-      await recursiveUpdate(scraper, databaseKey, items, 0);
-
-      console.log("Done updating " + databaseKey);
-    });
-  });
+  clearInterval();
 };
 
 const forAll = (func) => {
@@ -78,6 +129,6 @@ export default {
     forAll(startScraper);
   },
   update: () => {
-    forAll(updateScraper);
+    updateScrapers();
   },
 };

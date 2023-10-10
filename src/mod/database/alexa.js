@@ -3,6 +3,7 @@ import fuse from "fuse.js";
 
 import avatars from "./models/avatar.js";
 import genericDatabase from "./models/generic.js";
+import log from "../util/log.js";
 
 const databaseTables = {
   avatars,
@@ -16,13 +17,13 @@ const databaseTables = {
 };
 const database = new sqlite3.Database("db/sql/vrmodels.db", (err) => {
   if (err) {
-    console.error(err.message);
+    log.error(err.message);
   }
-  console.log("Connected to the database.");
+  log.info("Connected to the database.");
   for (const [databaseKey, db] of Object.entries(databaseTables)) {
     database.run(db.createTable, (err) => {
       if (err) {
-        return console.error(err.message);
+        return log.error(err.message);
       }
     });
   }
@@ -145,7 +146,7 @@ function genericFilter(req, res, db) {
 
   database.all(query, params, (err, results) => {
     if (err) {
-      console.error(err);
+      log.error(err);
       return res.status(500).json({ error: err.message });
     }
 
@@ -175,26 +176,26 @@ function genericFilter(req, res, db) {
 const insert = (databaseKey, item) => {
   const db = databaseTables[databaseKey];
   if (!db) {
-    return console.error(`Invalid database: ${databaseKey}`);
+    return log.error(`Invalid database: ${databaseKey}`);
   }
 
   database.run(db.select, [item.itemId], (err, row) => {
     if (err) {
-      return console.error(err.message);
+      return log.error(err.message);
     }
 
     if (row) {
-      console.log(`${databaseKey}: ALREADY EXISTS ${item.name}`);
+      //log.info(`${databaseKey}: ALREADY EXISTS ${item.name}`);
       return;
     }
 
     const { query, params } = db.insert(item);
     database.run(query, params, (err) => {
       if (err) {
-        return console.error(err.message);
+        return log.error(err.message);
       }
 
-      console.log(`${databaseKey}: INSERTED ${item.name}`);
+      //log.info(`${databaseKey}: INSERTED ${item.name}`);
     });
   });
 };
@@ -202,23 +203,23 @@ const insert = (databaseKey, item) => {
 const update = (databaseKey, item) => {
   const db = databaseTables[databaseKey];
   if (!db) {
-    return console.error(`Invalid database: ${databaseKey}`);
+    return log.error(`Invalid database: ${databaseKey}`);
   }
 
   const { query, params } = db.update(item);
   database.run(query, params, (err) => {
     if (err) {
-      return console.error(err.message);
+      return log.error(`${item.name} in ${databaseKey}: ${err.message}`);
     }
 
-    console.log(`${databaseKey}: UPDATED ${item.name}`);
+    //log.info(`${databaseKey}: UPDATED ${item.name}`);
   });
 };
 
 const getTableItems = (databaseKey) => {
   const db = databaseTables[databaseKey];
   if (!db) {
-    return console.error(`Invalid database: ${databaseKey}`);
+    return log.error(`Invalid database: ${databaseKey}`);
   }
 
   return new Promise((resolve, reject) => {
@@ -232,9 +233,27 @@ const getTableItems = (databaseKey) => {
   });
 };
 
+const getItemFromId = (databaseKey, itemId) => {
+  const db = databaseTables[databaseKey];
+  if (!db) {
+    return log.error(`Invalid database: ${databaseKey}`);
+  }
+
+  return new Promise((resolve, reject) => {
+    database.get(db.select, [itemId], (err, row) => {
+      if (err) {
+        return reject(err);
+      }
+
+      resolve(row);
+    });
+  });
+};
+
 export default {
   genericFilter,
   insert,
   update,
   getTableItems,
+  getItemFromId,
 };

@@ -1,5 +1,6 @@
 import express from "express";
 import alexa from "../database/alexa.js";
+import log from "../util/log.js";
 
 const app = express();
 app.use(express.json());
@@ -30,6 +31,6 @@ app.use((req, res, next) => {
 
 export default () => {
   app.listen(port, () => {
-    console.log(`Server listening on port ${port}`);
+    log.info(`Server listening on port ${port}`);
   });
 };

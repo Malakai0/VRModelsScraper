@@ -1,6 +1,7 @@
 node_modules
 package-lock.json
 .env
+.vscode
 
 db/sql/*.db
 db/sql/*.db-journal

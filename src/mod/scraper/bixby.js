@@ -5,6 +5,9 @@ import cheerio from "cheerio";
 import events from "events";
 import fs from "fs";
 
+import log from "../util/log.js";
+import genericScrapeItem from "./models/generic.js";
+
 // Bixby is responsible for scraping a segment of a catalog on VRModels.
 // Originally it was also only designed for the Avatar catalog, but it's
 // been generalized to work with any catalog under the same domain.
@@ -19,7 +22,7 @@ class Bixby {
 
   // Overridable method that returns the scraped elements from a page.
   scrapeItem(itemBody, itemName, itemURL) {
-    throw new Error("Not implemented");
+    return genericScrapeItem(itemBody, itemName, itemURL);
   }
 
   // Overridable method that returns URL for a page.
@@ -167,7 +170,7 @@ class Bixby {
           resolve();
         })
         .catch((err) => {
-          console.log(err);
+          log.error(err);
           reject(err);
         });
     });
@@ -190,7 +193,7 @@ class Bixby {
       this.state.lastItemLogged = index;
       this.state.lastPage = 1;
       this.state.write();
-      return;
+      return 0;
     }
 
     let page = this.state.lastPage;
@@ -213,10 +216,11 @@ class Bixby {
 
       if (index == this.state.lastItemLogged) {
         // save some requests
-        return;
+        return 0;
       }
     }
 
+    let itemsAdded = 0;
     let reachedIndex = false;
     for (let pageNumber = page; pageNumber >= 1; pageNumber--) {
       const items = await this.getItemsOnPage(pageNumber);
@@ -236,15 +240,18 @@ class Bixby {
               this.logEvent.emit("item", item);
             })
             .catch((err) => {
-              console.log(err);
+              log.error(err);
             });
 
+          itemsAdded++;
           this.state.lastItemLogged = index;
           this.state.lastPage = pageNumber;
           this.state.write();
         }
       }
     }
+
+    return itemsAdded;
   }
 }
 
