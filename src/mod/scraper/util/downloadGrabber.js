@@ -31,12 +31,13 @@ export default ($) => {
     .get()
     .filter((e) => e != "");
 
-  if (downloadLinks.length == 0) {
-    // If there's no download links, then it's probably hosted off-site
-    // So we need to grab the download link and version from the "dload" class
-    const version = formatVersion($(".versiyamobil").text().trim()) || "1.0";
-    const downloadLink = $(".btnDownload").attr("href");
-    downloadLinks.push(`${version}:${downloadLink}`);
+  const lastVersion = formatVersion($(".versiyamobil").last().text().trim());
+  if (
+    downloadLinks.length == 0 ||
+    lastVersion != downloadLinks[downloadLinks.length - 1].split(":")[0]
+  ) {
+    const downloadLink = $(".btnDownload").last().attr("href");
+    downloadLinks.push(`${lastVersion}:${downloadLink}`);
   }
 
   return downloadLinks.join(", ");

@@ -58,12 +58,13 @@ const updateScraper = (scraper, databaseKey) => {
 
   return new Promise(async () => {
     const items = await alexa.getTableItems(databaseKey);
+    const perBatch = 50;
 
     scraper.totalItems = items.length;
 
-    for (let i = 0; i < items.length; i += 50) {
+    for (let i = 0; i < items.length; i += perBatch) {
       const promises = [];
-      for (let j = i; j < i + 50 && j < items.length; j++) {
+      for (let j = i; j < i + perBatch && j < items.length; j++) {
         const promise = scraper.update(items[j].Name, items[j].Url);
         promise.then(() => {
           scraper.itemsScraped++;
